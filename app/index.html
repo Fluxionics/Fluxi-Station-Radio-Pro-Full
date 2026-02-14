@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fluxi Station - Radio Profesional</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0a0a;
+            color: #fff;
+            overflow: hidden;
+        }
+        
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        
+        /* HEADER */
+        .header {
+            background: linear-gradient(180deg, #1a1a1a 0%, #141414 100%);
+            border-bottom: 3px solid #00ff88;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 900;
+            background: linear-gradient(90deg, #00ff88, #00ccff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .clock {
+            font-family: 'Courier New', monospace;
+            font-size: 1.5rem;
+            color: #00ff88;
+            text-shadow: 0 0 10px rgba(0,255,136,0.5);
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-emergency {
+            background: #ff3333;
+            color: white;
+            font-size: 1rem;
+        }
+        
+        .btn-emergency:hover {
+            background: #cc0000;
+            transform: scale(1.05);
+        }
+        
+        .btn-record {
+            background: #333;
+            color: white;
+        }
+        
+        .btn-record.recording {
+            background: #ff3333;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        /* MAIN CONTENT */
+        .main-content {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 15px;
+            padding: 15px;
+            overflow: hidden;
+        }
+        
+        /* MIXER */
+        .mixer-section {
+            background: #141414;
+            border: 2px solid #2a2a2a;
+            border-radius: 12px;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .section-title {
+            font-size: 1.2rem;
+            color: #00ff88;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #2a2a2a;
+        }
+        
+        .channels-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+        
+        .channel {
+            background: #1f1f1f;
+            border: 2px solid #2a2a2a;
+            border-radius: 8px;
+            padding: 15px 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .channel:hover {
+            border-color: #00ff88;
+        }
+        
+        .channel-name {
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-align: center;
+            color: #00ff88;
+        }
+        
+        .channel-vu {
+            height: 60px;
+            background: #0a0a0a;
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .vu-fill {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(180deg, #ff3333, #ffaa00, #ffff00, #00ff88);
+            width: 100%;
+            height: 0%;
+            transition: height 0.1s;
+        }
+        
+        .channel-fader {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .fader {
+            writing-mode: bt-lr;
+            -webkit-appearance: slider-vertical;
+            width: 30px;
+            height: 80px;
+            background: #0a0a0a;
+            border-radius: 5px;
+        }
+        
+        .fader::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 28px;
+            height: 12px;
+            background: #00ff88;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        
+        .volume-value {
+            font-size: 0.75rem;
+            font-family: 'Courier New', monospace;
+            color: #00ff88;
+        }
+        
+        .channel-controls {
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+        }
+        
+        .btn-small {
+            padding: 5px 10px;
+            background: #333;
+            border: 1px solid #444;
+            color: #999;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        
+        .btn-small:hover {
+            border-color: #00ff88;
+            color: #fff;
+        }
+        
+        .btn-small.active {
+            background: #00ff88;
+            color: #000;
+        }
+        
+        .load-file-btn {
+            width: 100%;
+            padding: 8px;
+            background: #2a2a2a;
+            border: 1px solid #444;
+            color: #00ff88;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            margin-top: 5px;
+        }
+        
+        .load-file-btn:hover {
+            background: #333;
+        }
+        
+        /* SIDEBAR */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .master-section,
+        .hotkeys-section {
+            background: #141414;
+            border: 2px solid #2a2a2a;
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        .master-section {
+            flex: 0 0 auto;
+        }
+        
+        .hotkeys-section {
+            flex: 1;
+            overflow-y: auto;
+        }
+        
+        .master-vu {
+            background: #0a0a0a;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .vu-meter {
+            height: 30px;
+            background: #1a1a1a;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .vu-meter-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff88, #ffff00, #ffaa00, #ff3333);
+            width: 0%;
+            transition: width 0.1s;
+        }
+        
+        .db-display {
+            text-align: center;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1rem;
+            color: #00ff88;
+            margin-top: 10px;
+        }
+        
+        .master-fader-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .master-fader {
+            writing-mode: bt-lr;
+            -webkit-appearance: slider-vertical;
+            width: 40px;
+            height: 100px;
+        }
+        
+        .hotkeys-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        
+        .hotkey-pad {
+            background: #1f1f1f;
+            border: 2px solid #2a2a2a;
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+        
+        .hotkey-pad:hover {
+            border-color: #00ff88;
+            transform: translateY(-2px);
+        }
+        
+        .hotkey-pad.playing {
+            border-color: #00ff88;
+            box-shadow: 0 0 20px rgba(0,255,136,0.5);
+        }
+        
+        .hotkey-key {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: #00ff88;
+            color: #000;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 900;
+        }
+        
+        .hotkey-name {
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .hotkey-type {
+            font-size: 0.65rem;
+            color: #666;
+            text-transform: uppercase;
+        }
+        
+        .hotkey-file {
+            font-size: 0.65rem;
+            color: #00ff88;
+            margin-top: 5px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        /* FOOTER */
+        .footer {
+            background: #141414;
+            border-top: 2px solid #2a2a2a;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            color: #666;
+        }
+        
+        .status-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #00ff88;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse-dot 2s infinite;
+        }
+        
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        /* SCROLLBAR */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #0a0a0a;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #00ff88;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- HEADER -->
+        <div class="header">
+            <div class="logo">📡 FLUXI STATION</div>
+            <div class="clock" id="clock">00:00:00</div>
+            <div class="controls">
+                <button class="btn btn-emergency" onclick="emergencyStop()">⏹ STOP</button>
+                <button class="btn btn-record" id="btnRecord" onclick="toggleRecord()">⏺ REC</button>
+            </div>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="main-content">
+            <!-- MIXER -->
+            <div class="mixer-section">
+                <h2 class="section-title">MEZCLADOR (8 CANALES)</h2>
+                <div class="channels-grid" id="channelsGrid"></div>
+            </div>
+
+            <!-- SIDEBAR -->
+            <div class="sidebar">
+                <!-- MASTER -->
+                <div class="master-section">
+                    <h2 class="section-title">MASTER OUTPUT</h2>
+                    <div class="master-vu">
+                        <div class="vu-meter">
+                            <div class="vu-meter-fill" id="vuMaster"></div>
+                        </div>
+                        <div class="db-display" id="dbDisplay">-∞ dB</div>
+                    </div>
+                    <div class="master-fader-container">
+                        <label>MASTER VOLUME</label>
+                        <input type="range" class="master-fader" id="masterFader" 
+                               min="0" max="100" value="80" orient="vertical">
+                        <div class="volume-value" id="masterVolume">80%</div>
+                    </div>
+                </div>
+
+                <!-- HOTKEYS -->
+                <div class="hotkeys-section">
+                    <h2 class="section-title">HOTKEYS (16 PADS)</h2>
+                    <div class="hotkeys-grid" id="hotkeysGrid"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="footer">
+            <div><span class="status-dot"></span>Sistema operando</div>
+            <div>Fluxi Station v1.0 - Sistema Profesional de Radio</div>
+            <div>CPU: <span id="cpuUsage">0%</span> | Latencia: <span id="latency">0ms</span></div>
+        </div>
+    </div>
+
+    <script>
+        const { ipcRenderer } = require('electron');
+
+        // Estado global
+        const App = {
+            channels: [],
+            hotkeys: [],
+            audioContext: null,
+            masterGain: null,
+            analyser: null,
+            isRecording: false,
+            files: {}
+        };
+
+        /**
+         * Inicializar aplicación
+         */
+        function init() {
+            console.log('🚀 Iniciando Fluxi Station...');
+            
+            // Crear contexto de audio
+            App.audioContext = new (window.AudioContext || window.webkitAudioContext)({
+                sampleRate: 48000,
+                latencyHint: 'interactive'
+            });
+            
+            // Crear master gain y analyser
+            App.masterGain = App.audioContext.createGain();
+            App.masterGain.gain.value = 0.8;
+            
+            App.analyser = App.audioContext.createAnalyser();
+            App.analyser.fftSize = 2048;
+            
+            App.masterGain.connect(App.analyser);
+            App.analyser.connect(App.audioContext.destination);
+            
+            // Renderizar UI
+            renderChannels();
+            renderHotkeys();
+            
+            // Event listeners
+            setupEventListeners();
+            
+            // Iniciar loops
+            startUpdateLoops();
+            
+            console.log('✅ Fluxi Station listo');
+        }
+
+        /**
+         * Renderizar canales
+         */
+        function renderChannels() {
+            const container = document.getElementById('channelsGrid');
+            const channelNames = [
+                'Micrófono 1', 'Micrófono 2', 'Micrófono 3', 'Teléfono',
+                'Música Manual', 'Playlist Auto', 'Jingles/Cart', 'Efectos/SFX'
+            ];
+            
+            channelNames.forEach((name, index) => {
+                const id = index + 1;
+                const channel = createChannel(id, name);
+                App.channels.push(channel);
+                container.appendChild(channel.element);
+            });
+        }
+
+        /**
+         * Crear canal
+         */
+        function createChannel(id, name) {
+            const div = document.createElement('div');
+            div.className = 'channel';
+            div.innerHTML = `
+                <div class="channel-name">${name}</div>
+                <div class="channel-vu">
+                    <div class="vu-fill" id="vu-${id}"></div>
+                </div>
+                <div class="channel-fader">
+                    <input type="range" class="fader" orient="vertical"
+                           min="0" max="100" value="100" id="fader-${id}">
+                    <div class="volume-value" id="vol-${id}">100%</div>
+                </div>
+                <div class="channel-controls">
+                    <button class="btn-small" id="mute-${id}">M</button>
+                    <button class="btn-small" id="solo-${id}">S</button>
+                </div>
+                <button class="load-file-btn" onclick="loadFileToChannel(${id})">
+                    📁 Cargar Archivo
+                </button>
+            `;
+            
+            const channel = {
+                id,
+                name,
+                element: div,
+                volume: 100,
+                muted: false,
+                solo: false,
+                gainNode: App.audioContext.createGain(),
+                analyser: App.audioContext.createAnalyser(),
+                audioElement: null
+            };
+            
+            channel.analyser.fftSize = 1024;
+            channel.gainNode.connect(channel.analyser);
+            channel.analyser.connect(App.masterGain);
+            
+            return channel;
+        }
+
+        /**
+         * Renderizar hotkeys
+         */
+        function renderHotkeys() {
+            const container = document.getElementById('hotkeysGrid');
+            const hotkeys = [
+                { id: 1, key: 'Z', name: 'Jingle 1', type: 'jingle' },
+                { id: 2, key: 'X', name: 'Jingle 2', type: 'jingle' },
+                { id: 3, key: 'C', name: 'Jingle 3', type: 'jingle' },
+                { id: 4, key: 'V', name: 'Jingle 4', type: 'jingle' },
+                { id: 5, key: 'A', name: 'Cortina 1', type: 'cortina' },
+                { id: 6, key: 'S', name: 'Cortina 2', type: 'cortina' },
+                { id: 7, key: 'D', name: 'Cortina 3', type: 'cortina' },
+                { id: 8, key: 'F', name: 'Cortina 4', type: 'cortina' },
+                { id: 9, key: 'Q', name: 'Efecto 1', type: 'efecto' },
+                { id: 10, key: 'W', name: 'Efecto 2', type: 'efecto' },
+                { id: 11, key: 'E', name: 'Efecto 3', type: 'efecto' },
+                { id: 12, key: 'R', name: 'Efecto 4', type: 'efecto' },
+                { id: 13, key: '1', name: 'Promo 1', type: 'promo' },
+                { id: 14, key: '2', name: 'Promo 2', type: 'promo' },
+                { id: 15, key: '3', name: 'Promo 3', type: 'promo' },
+                { id: 16, key: '4', name: 'Promo 4', type: 'promo' }
+            ];
+            
+            hotkeys.forEach(hk => {
+                const div = document.createElement('div');
+                div.className = 'hotkey-pad';
+                div.id = `pad-${hk.id}`;
+                div.innerHTML = `
+                    <div class="hotkey-key">${hk.key}</div>
+                    <div class="hotkey-name">${hk.name}</div>
+                    <div class="hotkey-type">${hk.type}</div>
+                    <div class="hotkey-file" id="file-${hk.id}">Sin archivo</div>
+                `;
+                
+                div.onclick = () => loadFileToHotkey(hk.id);
+                container.appendChild(div);
+                App.hotkeys.push({ ...hk, file: null });
+            });
+        }
+
+        /**
+         * Setup event listeners
+         */
+        function setupEventListeners() {
+            // Master fader
+            document.getElementById('masterFader').oninput = (e) => {
+                const value = parseInt(e.target.value);
+                App.masterGain.gain.value = value / 100;
+                document.getElementById('masterVolume').textContent = value + '%';
+            };
+            
+            // Faders de canales
+            App.channels.forEach(ch => {
+                const fader = document.getElementById(`fader-${ch.id}`);
+                fader.oninput = (e) => {
+                    const value = parseInt(e.target.value);
+                    ch.volume = value;
+                    ch.gainNode.gain.value = value / 100;
+                    document.getElementById(`vol-${ch.id}`).textContent = value + '%';
+                };
+                
+                // Botón mute
+                document.getElementById(`mute-${ch.id}`).onclick = () => {
+                    ch.muted = !ch.muted;
+                    ch.gainNode.gain.value = ch.muted ? 0 : ch.volume / 100;
+                    document.getElementById(`mute-${ch.id}`).classList.toggle('active', ch.muted);
+                };
+                
+                // Botón solo
+                document.getElementById(`solo-${ch.id}`).onclick = () => {
+                    ch.solo = !ch.solo;
+                    document.getElementById(`solo-${ch.id}`).classList.toggle('active', ch.solo);
+                    updateSoloState();
+                };
+            });
+            
+            // Hotkeys desde Electron
+            ipcRenderer.on('hotkey-pressed', (event, data) => {
+                playHotkey(data.id);
+            });
+            
+            // Archivo seleccionado
+            ipcRenderer.on('audio-file-selected', (event, filePath) => {
+                if (App.loadingFor.type === 'channel') {
+                    assignFileToChannel(App.loadingFor.id, filePath);
+                } else {
+                    assignFileToHotkey(App.loadingFor.id, filePath);
+                }
+            });
+        }
+
+        /**
+         * Cargar archivo a canal
+         */
+        function loadFileToChannel(channelId) {
+            App.loadingFor = { type: 'channel', id: channelId };
+            ipcRenderer.send('load-audio-file');
+        }
+
+        /**
+         * Asignar archivo a canal
+         */
+        function assignFileToChannel(channelId, filePath) {
+            const channel = App.channels.find(ch => ch.id === channelId);
+            if (!channel) return;
+            
+            // Crear elemento de audio
+            if (channel.audioElement) {
+                channel.audioElement.pause();
+                channel.audioElement = null;
+            }
+            
+            const audio = new Audio(filePath);
+            audio.loop = false;
+            
+            // Crear source y conectar
+            const source = App.audioContext.createMediaElementSource(audio);
+            source.connect(channel.gainNode);
+            
+            channel.audioElement = audio;
+            audio.play();
+            
+            console.log(`✅ Archivo cargado en canal ${channelId}`);
+        }
+
+        /**
+         * Cargar archivo a hotkey
+         */
+        function loadFileToHotkey(hotkeyId) {
+            App.loadingFor = { type: 'hotkey', id: hotkeyId };
+            ipcRenderer.send('load-audio-file');
+        }
+
+        /**
+         * Asignar archivo a hotkey
+         */
+        function assignFileToHotkey(hotkeyId, filePath) {
+            const hotkey = App.hotkeys.find(hk => hk.id === hotkeyId);
+            if (!hotkey) return;
+            
+            hotkey.file = filePath;
+            const fileName = filePath.split('/').pop().split('\\').pop();
+            document.getElementById(`file-${hotkeyId}`).textContent = fileName;
+            
+            console.log(`✅ Archivo asignado a hotkey ${hotkeyId}`);
+        }
+
+        /**
+         * Reproducir hotkey
+         */
+        function playHotkey(hotkeyId) {
+            const hotkey = App.hotkeys.find(hk => hk.id === hotkeyId);
+            if (!hotkey || !hotkey.file) {
+                console.log(`⚠️ Hotkey ${hotkeyId} sin archivo`);
+                return;
+            }
+            
+            // Crear audio y reproducir
+            const audio = new Audio(hotkey.file);
+            const source = App.audioContext.createMediaElementSource(audio);
+            const gainNode = App.audioContext.createGain();
+            
+            source.connect(gainNode);
+            gainNode.connect(App.masterGain);
+            
+            audio.play();
+            
+            // Efecto visual
+            const pad = document.getElementById(`pad-${hotkeyId}`);
+            pad.classList.add('playing');
+            setTimeout(() => pad.classList.remove('playing'), 500);
+            
+            console.log(`▶ Reproduciendo: ${hotkey.name}`);
+        }
+
+        /**
+         * Emergency stop
+         */
+        function emergencyStop() {
+            App.channels.forEach(ch => {
+                if (ch.audioElement) {
+                    ch.audioElement.pause();
+                    ch.audioElement.currentTime = 0;
+                }
+            });
+            
+            document.body.style.backgroundColor = '#ff0000';
+            setTimeout(() => document.body.style.backgroundColor = '', 200);
+            
+            console.log('🛑 EMERGENCY STOP');
+        }
+
+        /**
+         * Toggle grabación
+         */
+        function toggleRecord() {
+            App.isRecording = !App.isRecording;
+            const btn = document.getElementById('btnRecord');
+            btn.classList.toggle('recording', App.isRecording);
+            
+            if (App.isRecording) {
+                console.log('🔴 Grabación iniciada');
+            } else {
+                console.log('⏹ Grabación detenida');
+            }
+        }
+
+        /**
+         * Actualizar solo state
+         */
+        function updateSoloState() {
+            const soloActive = App.channels.some(ch => ch.solo);
+            
+            App.channels.forEach(ch => {
+                if (soloActive) {
+                    ch.gainNode.gain.value = ch.solo ? ch.volume / 100 : 0;
+                } else {
+                    ch.gainNode.gain.value = ch.muted ? 0 : ch.volume / 100;
+                }
+            });
+        }
+
+        /**
+         * Iniciar loops de actualización
+         */
+        function startUpdateLoops() {
+            setInterval(updateClock, 1000);
+            setInterval(updateVUMeters, 50);
+        }
+
+        /**
+         * Actualizar reloj
+         */
+        function updateClock() {
+            const now = new Date();
+            const h = String(now.getHours()).padStart(2, '0');
+            const m = String(now.getMinutes()).padStart(2, '0');
+            const s = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('clock').textContent = `${h}:${m}:${s}`;
+        }
+
+        /**
+         * Actualizar medidores VU
+         */
+        function updateVUMeters() {
+            // VU Master
+            const dataArray = new Uint8Array(App.analyser.frequencyBinCount);
+            App.analyser.getByteTimeDomainData(dataArray);
+            
+            let sum = 0;
+            for (let i = 0; i < dataArray.length; i++) {
+                const normalized = (dataArray[i] - 128) / 128;
+                sum += normalized * normalized;
+            }
+            const rms = Math.sqrt(sum / dataArray.length);
+            const db = 20 * Math.log10(rms);
+            const level = Math.max(0, Math.min(100, (db + 60) * 1.66));
+            
+            document.getElementById('vuMaster').style.width = level + '%';
+            document.getElementById('dbDisplay').textContent = db.toFixed(1) + ' dB';
+            
+            // VU Canales
+            App.channels.forEach(ch => {
+                if (!ch.analyser) return;
+                
+                const chData = new Uint8Array(ch.analyser.frequencyBinCount);
+                ch.analyser.getByteTimeDomainData(chData);
+                
+                let chSum = 0;
+                for (let i = 0; i < chData.length; i++) {
+                    const normalized = (chData[i] - 128) / 128;
+                    chSum += normalized * normalized;
+                }
+                const chRms = Math.sqrt(chSum / chData.length);
+                const chDb = 20 * Math.log10(chRms);
+                const chLevel = Math.max(0, Math.min(100, (chDb + 60) * 1.66));
+                
+                document.getElementById(`vu-${ch.id}`).style.height = chLevel + '%';
+            });
+        }
+
+        // Iniciar al cargar
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
