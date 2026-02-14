@@ -1,0 +1,16 @@
+{
+  "name": "fluxi-station-complete",
+  "version": "1.0.0",
+  "description": "Fluxi Station - Sistema COMPLETO de radio profesional (Zara Radio + vMix + más)",
+  "main": "app/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev"
+  },
+  "keywords": ["radio", "broadcast", "streaming", "automation"],
+  "author": "Fluxi Station Team",
+  "license": "MIT",
+  "dependencies": {
+    "electron": "^28.0.0"
+  }
+}
